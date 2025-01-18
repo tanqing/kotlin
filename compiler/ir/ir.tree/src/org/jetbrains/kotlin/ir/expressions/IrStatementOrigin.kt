@@ -73,6 +73,7 @@ interface IrStatementOrigin {
         val PERCEQ by IrStatementOriginImpl
 
         val ARGUMENTS_REORDERING_FOR_CALL by IrStatementOriginImpl
+        val IMPLICIT_ARGUMENT by IrStatementOriginImpl
         val DESTRUCTURING_DECLARATION by IrStatementOriginImpl
 
         /**
@@ -154,4 +155,14 @@ fun IrStatementOrigin.isAssignmentOperator(): Boolean =
         IrStatementOrigin.DIVEQ,
         IrStatementOrigin.PERCEQ -> true
         else -> isAssignmentOperatorWithResult()
+    }
+
+fun IrStatementOrigin.isComparisonOperator() =
+    when (this) {
+        IrStatementOrigin.LT,
+        IrStatementOrigin.GT,
+        IrStatementOrigin.LTEQ,
+        IrStatementOrigin.GTEQ,
+            -> true
+        else -> false
     }

@@ -23,6 +23,8 @@ import org.jetbrains.kotlin.konan.target.presetName
 import org.jetbrains.kotlin.test.util.KtTestUtil
 import org.jetbrains.kotlin.utils.addToStdlib.ifTrue
 import java.io.File
+import java.io.PrintWriter
+import java.io.StringWriter
 import java.lang.management.ManagementFactory
 import java.nio.file.Files
 import java.nio.file.Path
@@ -125,6 +127,7 @@ fun KGPBaseTest.nativeProject(
     buildOptions: BuildOptions = defaultBuildOptions,
     forceOutput: EnableGradleDebug = EnableGradleDebug.AUTO,
     enableBuildScan: Boolean = false,
+    dependencyManagement: DependencyManagement = DependencyManagement.DefaultDependencyManagement(),
     addHeapDumpOptions: Boolean = true,
     enableGradleDebug: EnableGradleDebug = EnableGradleDebug.AUTO,
     enableGradleDaemonMemoryLimitInMb: Int? = 1024,
@@ -134,7 +137,6 @@ fun KGPBaseTest.nativeProject(
     localRepoDir: Path? = null,
     environmentVariables: EnvironmentalVariables = EnvironmentalVariables(),
     configureSubProjects: Boolean = false,
-    dependencyManagement: DependencyManagement = DependencyManagement.DefaultDependencyManagement(),
     test: TestProject.() -> Unit = {},
 ): TestProject {
     val project = project(
@@ -173,36 +175,22 @@ fun TestProject.build(
     buildOptions: BuildOptions = this.buildOptions,
     environmentVariables: EnvironmentalVariables = this.environmentVariables,
     assertions: BuildResult.() -> Unit = {},
-) {
-    if (enableBuildScan) agreeToBuildScanService()
-    ensureKotlinCompilerArgumentsPluginAppliedCorrectly(buildOptions)
-
-    if (enableGradleDebug.toBooleanFlag() && isTeamCityRun) {
-        fail("Please don't set `enableGradleDebug = true` in teamcity run, this can fail build")
-    }
-
-    val allBuildArguments = commonBuildSetup(
-        buildArguments.toList(),
-        buildOptions,
-        enableBuildCacheDebug,
-        enableBuildScan,
-        enableGradleDaemonMemoryLimitInMb,
-        enableKotlinDaemonMemoryLimitInMb,
-        gradleVersion,
-        kotlinDaemonDebugPort
-    )
-    val gradleRunnerForBuild = gradleRunner
-        .also { if (forceOutput.toBooleanFlag()) it.forwardOutput() }
-        .also { if (environmentVariables.environmentalVariables.isNotEmpty()) it.withEnvironment(System.getenv() + environmentVariables.environmentalVariables) }
-        .withDebug(enableGradleDebug.toBooleanFlag())
-        .withArguments(allBuildArguments)
-    withBuildSummary(allBuildArguments) {
-        val buildResult = gradleRunnerForBuild.build()
-        if (enableBuildScan) buildResult.printBuildScanUrl()
-        assertions(buildResult)
-        buildResult.additionalAssertions(buildOptions)
-    }
-}
+) = buildWithAction(
+    parameters = BuildParameterization(
+        buildArguments = buildArguments.toList(),
+        forceOutput = forceOutput,
+        enableGradleDebug = enableGradleDebug,
+        kotlinDaemonDebugPort = kotlinDaemonDebugPort,
+        enableBuildCacheDebug = enableBuildCacheDebug,
+        enableBuildScan = enableBuildScan,
+        buildOptions = buildOptions,
+        enableGradleDaemonMemoryLimitInMb = enableGradleDaemonMemoryLimitInMb,
+        enableKotlinDaemonMemoryLimitInMb = enableKotlinDaemonMemoryLimitInMb,
+        environmentVariables = environmentVariables,
+    ),
+    assertions = assertions,
+    action = GradleRunner::build,
+)
 
 /**
  * Trigger test project build with given [buildArguments] and assert build is failed.
@@ -219,32 +207,72 @@ fun TestProject.buildAndFail(
     enableKotlinDaemonMemoryLimitInMb: Int? = this.enableKotlinDaemonMemoryLimitInMb,
     environmentVariables: EnvironmentalVariables = this.environmentVariables,
     assertions: BuildResult.() -> Unit = {},
+) = buildWithAction(
+    parameters = BuildParameterization(
+        buildArguments = buildArguments.toList(),
+        forceOutput = forceOutput,
+        enableGradleDebug = enableGradleDebug,
+        kotlinDaemonDebugPort = kotlinDaemonDebugPort,
+        enableBuildCacheDebug = enableBuildCacheDebug,
+        enableBuildScan = enableBuildScan,
+        buildOptions = buildOptions,
+        enableGradleDaemonMemoryLimitInMb = enableGradleDaemonMemoryLimitInMb,
+        enableKotlinDaemonMemoryLimitInMb = enableKotlinDaemonMemoryLimitInMb,
+        environmentVariables = environmentVariables,
+    ),
+    assertions = assertions,
+    action = GradleRunner::buildAndFail,
+)
+
+private data class BuildParameterization(
+    val buildArguments: List<String>,
+    val forceOutput: EnableGradleDebug,
+    val enableGradleDebug: EnableGradleDebug,
+    val kotlinDaemonDebugPort: Int?,
+    val enableBuildCacheDebug: Boolean,
+    val enableBuildScan: Boolean,
+    val buildOptions: BuildOptions,
+    val enableGradleDaemonMemoryLimitInMb: Int?,
+    val enableKotlinDaemonMemoryLimitInMb: Int?,
+    val environmentVariables: EnvironmentalVariables,
+)
+
+private fun TestProject.buildWithAction(
+    parameters: BuildParameterization,
+    assertions: BuildResult.() -> Unit = {},
+    action: GradleRunner.() -> BuildResult = GradleRunner::build,
 ) {
-    if (enableBuildScan) agreeToBuildScanService()
-    ensureKotlinCompilerArgumentsPluginAppliedCorrectly(buildOptions)
+    with(parameters) {
+        if (enableBuildScan) agreeToBuildScanService()
+        ensureKotlinCompilerArgumentsPluginAppliedCorrectly(buildOptions)
 
-    val allBuildArguments = commonBuildSetup(
-        buildArguments.toList(),
-        buildOptions,
-        enableBuildCacheDebug,
-        enableBuildScan,
-        enableGradleDaemonMemoryLimitInMb,
-        enableKotlinDaemonMemoryLimitInMb,
-        gradleVersion,
-        kotlinDaemonDebugPort
-    )
-    val gradleRunnerForBuild = gradleRunner
-        .also { if (forceOutput.toBooleanFlag()) it.forwardOutput() }
-        .also { if (environmentVariables.environmentalVariables.isNotEmpty()) it.withEnvironment(System.getenv() + environmentVariables.environmentalVariables) }
-        .withDebug(enableGradleDebug.toBooleanFlag())
-        .withArguments(allBuildArguments)
-    withBuildSummary(allBuildArguments) {
-        val buildResult = gradleRunnerForBuild.buildAndFail()
-        if (enableBuildScan) buildResult.printBuildScanUrl()
-        assertions(buildResult)
-        buildResult.additionalAssertions(buildOptions)
+        val runWithDebug = enableGradleDebug.toBooleanFlag(overridingEnvironmentVariablesInstantiationBacktrace = environmentVariables.overridingEnvironmentVariablesInstantiationBacktrace)
+        if (runWithDebug && isTeamCityRun) {
+            fail("Please don't set `enableGradleDebug = true` in teamcity run, this can fail build")
+        }
+
+        val allBuildArguments = commonBuildSetup(
+            buildArguments,
+            buildOptions,
+            enableBuildCacheDebug,
+            enableBuildScan,
+            enableGradleDaemonMemoryLimitInMb,
+            enableKotlinDaemonMemoryLimitInMb,
+            gradleVersion,
+            kotlinDaemonDebugPort
+        )
+        val gradleRunnerForBuild = gradleRunner
+            .also { if (forceOutput.toBooleanFlag(overridingEnvironmentVariablesInstantiationBacktrace = null)) it.forwardOutput() }
+            .also { if (environmentVariables.environmentalVariables.isNotEmpty()) it.withEnvironment(System.getenv() + environmentVariables.environmentalVariables) }
+            .withDebug(runWithDebug)
+            .withArguments(allBuildArguments)
+        withBuildSummary(allBuildArguments) {
+            val buildResult = gradleRunnerForBuild.action()
+            if (enableBuildScan) buildResult.printBuildScanUrl()
+            assertions(buildResult)
+            buildResult.additionalAssertions(buildOptions)
+        }
     }
-
 }
 
 fun getGradleUserHome(): File {
@@ -268,7 +296,6 @@ private fun TestProject.ensureKotlinCompilerArgumentsPluginAppliedCorrectly(buil
 internal inline fun <reified T> TestProject.getModels(
     crossinline assertions: ModelContainer<T>.() -> Unit,
 ) {
-
     val allBuildArguments = commonBuildSetup(
         emptyList(),
         buildOptions,
@@ -298,7 +325,6 @@ internal inline fun <reified T> TestProject.getModels(
 fun TestProject.enableLocalBuildCache(
     buildCacheLocation: Path,
 ) {
-
     val settingsFile = if (Files.exists(settingsGradle)) settingsGradle else settingsGradleKts
 
     settingsFile.append(
@@ -371,13 +397,27 @@ open class GradleProject(
     fun relativeToProject(
         files: List<Path>,
     ): List<Path> = files.map { projectPath.relativize(it) }
+
+    private var counter = 0
+    fun generateIdentifier(): String {
+        return counter.toString().also { counter += 1 }
+    }
+
+    fun markAsUsingInjections() {
+        usesInjections = true
+    }
+    var usesInjections = false
+        private set
 }
 
 /**
  * You need at least Gradle "7.0" for supporting environment variables with Gradle runner
  */
-@JvmInline
-value class EnvironmentalVariables @EnvironmentalVariablesOverride constructor(val environmentalVariables: Map<String, String> = emptyMap()) {
+class EnvironmentalVariables @EnvironmentalVariablesOverride constructor(
+    val environmentalVariables: Map<String, String> = emptyMap(),
+) {
+    val overridingEnvironmentVariablesInstantiationBacktrace: Throwable? = if (environmentalVariables.isNotEmpty()) Throwable() else null
+
     @EnvironmentalVariablesOverride
     constructor(vararg environmentVariables: Pair<String, String>) : this(mapOf(*environmentVariables))
 }
@@ -1078,18 +1118,45 @@ private fun acceptAndroidSdkLicenses(androidHome: File) {
  * Indicates if the test and the Gradle build started by the test should run in the same process.
  * This setup allows using a single debugger for both the test and the build process (including build script injections).
  *
- * Add debugTargetProcessWhenDebuggingKGP-IT=true to local.properties to automatically run IT withDebug when debugging the tests in IDE.
+ * Add kotlin.gradle.autoDebugIT=false to local.properties to opt out of implicit withDebug when debugging the tests in IDE.
  */
 enum class EnableGradleDebug {
     DISABLED,
     ENABLED,
     AUTO;
 
-    fun toBooleanFlag(): Boolean = when (this) {
-        DISABLED -> false
-        ENABLED -> true
-        AUTO -> {
-            System.getProperty("debugTargetProcessWhenDebuggingKGP-IT").toBoolean() && ManagementFactory.getRuntimeMXBean().inputArguments.toString().contains("-agentlib:jdwp")
+    fun toBooleanFlag(
+        overridingEnvironmentVariablesInstantiationBacktrace: Throwable?,
+    ): Boolean {
+        when (this) {
+            DISABLED -> return false
+            ENABLED -> return true
+            AUTO -> {
+                val isAutomaticDebuggingEnabled = System.getProperty("kotlin.gradle.autoDebugIT").toBoolean()
+                if (overridingEnvironmentVariablesInstantiationBacktrace != null) {
+                    if (isAutomaticDebuggingEnabled) {
+                        println(
+                            buildString {
+                                appendLine()
+                                appendLine("⚠ Automatic withDebug has been disabled due to use of overriding environment variables created:")
+                                overridingEnvironmentVariablesInstantiationBacktrace.backtrace().lineSequence().drop(1).forEach {
+                                    appendLine("  ${it}")
+                                }
+                            }
+                        )
+                    }
+                    return false
+                }
+                val isRunningUnderDebugger = ManagementFactory.getRuntimeMXBean().inputArguments.toString().contains("-agentlib:jdwp")
+                return isAutomaticDebuggingEnabled && isRunningUnderDebugger
+            }
         }
     }
 }
+
+private fun Throwable.backtrace(): String = StringWriter().use {
+    PrintWriter(it).use {
+        this.printStackTrace(it)
+    }
+    it
+}.toString()

@@ -11,6 +11,7 @@ import org.jetbrains.kotlin.backend.common.lower.*
 import org.jetbrains.kotlin.backend.common.lower.inline.LocalClassesInInlineLambdasLowering
 import org.jetbrains.kotlin.backend.common.lower.inline.OuterThisInInlineFunctionsSpecialAccessorLowering
 import org.jetbrains.kotlin.backend.konan.*
+import org.jetbrains.kotlin.backend.konan.serialization.InlineFunctionDeserializer
 import org.jetbrains.kotlin.config.KlibConfigurationKeys
 import org.jetbrains.kotlin.ir.builders.Scope
 import org.jetbrains.kotlin.ir.declarations.IrFunction
@@ -22,16 +23,14 @@ import org.jetbrains.kotlin.ir.types.IrType
 import org.jetbrains.kotlin.ir.util.dump
 
 internal class NativeInlineFunctionResolver(
-        private val generationState: NativeGenerationState,
+        context: Context,
         inlineMode: InlineMode,
-) : InlineFunctionResolverReplacingCoroutineIntrinsics<Context>(generationState.context, inlineMode) {
+) : InlineFunctionResolverReplacingCoroutineIntrinsics<Context>(context, inlineMode) {
     override fun getFunctionDeclaration(symbol: IrFunctionSymbol): IrFunction? {
         val function = super.getFunctionDeclaration(symbol) ?: return null
 
         if (function.body != null) return function
-
-        val moduleDeserializer = context.irLinker.getCachedDeclarationModuleDeserializer(function) ?: return null
-        moduleDeserializer.deserializeInlineFunction(function)
+        context.getInlineFunctionDeserializer(function).deserializeInlineFunction(function)
         lower(function)
 
         return function
@@ -41,6 +40,8 @@ internal class NativeInlineFunctionResolver(
         val body = function.body ?: return
 
         val doubleInliningEnabled = !context.config.configuration.getBoolean(KlibConfigurationKeys.NO_DOUBLE_INLINING)
+
+        UpgradeCallableReferences(context).lower(function)
 
         NativeAssertionWrapperLowering(context).lower(function)
 
@@ -55,12 +56,10 @@ internal class NativeInlineFunctionResolver(
         // LocalClassesInInlineFunctionsLowering(context).lower(body, function)
         // LocalClassesExtractionFromInlineFunctionsLowering(context).lower(body, function)
 
-        UpgradeCallableReferences(context).lower(function)
-
         ArrayConstructorLowering(context).lower(body, function)
 
         if (doubleInliningEnabled) {
-            NativeIrInliner(generationState, inlineMode = InlineMode.PRIVATE_INLINE_FUNCTIONS).lower(body, function)
+            NativeIrInliner(context, inlineMode = InlineMode.PRIVATE_INLINE_FUNCTIONS).lower(body, function)
             SyntheticAccessorLowering(context).lowerWithoutAddingAccessorsToParents(function)
         }
     }

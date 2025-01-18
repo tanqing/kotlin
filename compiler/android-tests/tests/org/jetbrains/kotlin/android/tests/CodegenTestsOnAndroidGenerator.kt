@@ -40,6 +40,7 @@ import org.jetbrains.kotlin.test.services.sourceProviders.AdditionalDiagnosticsS
 import org.jetbrains.kotlin.test.services.sourceProviders.CodegenHelpersSourceFilesProvider
 import org.jetbrains.kotlin.test.services.sourceProviders.CoroutineHelpersSourceFilesProvider
 import org.jetbrains.kotlin.test.util.KtTestUtil
+import org.jetbrains.kotlin.cli.common.disposeRootInWriteAction
 import org.jetbrains.kotlin.test.utils.TransformersFunctions.Android
 import org.junit.Assert
 import java.io.File
@@ -221,7 +222,7 @@ class CodegenTestsOnAndroidGenerator private constructor(private val pathManager
             } finally {
                 rawFiles.clear()
                 unitTestDescriptions.clear()
-                Disposer.dispose(disposable)
+                disposeRootInWriteAction(disposable)
             }
         }
 
@@ -341,7 +342,7 @@ class CodegenTestsOnAndroidGenerator private constructor(private val pathManager
                     val module = moduleStructure.modules.singleOrNull() ?: continue
                     if (module.files.any { it.isJavaFile || it.isKtsFile }) continue
                     if (module.files.isEmpty()) continue
-                    services.registerDependencyProvider(DependencyProviderImpl(services, moduleStructure.modules))
+                    services.registerArtifactsProvider(ArtifactsProvider(services, moduleStructure.modules))
 
                     val keyConfiguration = CompilerConfiguration()
                     val configuratorForFlags = JvmEnvironmentConfigurator(services)
@@ -356,11 +357,11 @@ class CodegenTestsOnAndroidGenerator private constructor(private val pathManager
                     keyConfiguration.languageVersionSettings = module.languageVersionSettings
                     keyConfiguration.put(
                         CommonConfigurationKeys.ENABLE_IR_VISIBILITY_CHECKS,
-                        !CodegenTestDirectives.DISABLE_IR_VISIBILITY_CHECKS.isApplicableTo(module),
+                        !CodegenTestDirectives.DISABLE_IR_VISIBILITY_CHECKS.isApplicableTo(module, services),
                     )
                     keyConfiguration.put(
                         CommonConfigurationKeys.ENABLE_IR_VARARG_TYPES_CHECKS,
-                        !CodegenTestDirectives.DISABLE_IR_VARARG_TYPE_CHECKS.isApplicableTo(module),
+                        !CodegenTestDirectives.DISABLE_IR_VARARG_TYPE_CHECKS.isApplicableTo(module, services),
                     )
 
                     val key = ConfigurationKey(kind, jdkKind, keyConfiguration.toString())
@@ -411,6 +412,7 @@ class CodegenTestsOnAndroidGenerator private constructor(private val pathManager
 
         assertions = JUnit5Assertions
         useAdditionalService<TemporaryDirectoryManager>(::TemporaryDirectoryManagerImpl)
+        useAdditionalService<TargetPlatformProvider>(::TargetPlatformProviderForCompilerTests)
         useAdditionalService<ApplicationDisposableProvider> { ExecutionListenerBasedDisposableProvider() }
         useAdditionalService<KotlinStandardLibrariesPathProvider> { StandardLibrariesPathProviderForKotlinProject }
         useSourcePreprocessor(*AbstractKotlinCompilerTest.defaultPreprocessors.toTypedArray())

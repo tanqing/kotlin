@@ -7,6 +7,7 @@ package org.jetbrains.kotlin.test.runners;
 
 import com.intellij.testFramework.TestDataPath;
 import org.jetbrains.kotlin.test.util.KtTestUtil;
+import org.jetbrains.kotlin.test.TargetBackend;
 import org.jetbrains.kotlin.test.TestMetadata;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -99,23 +100,6 @@ public class FirLightTreeDiagnosticsWithoutAliasExpansionTestGenerated extends A
     }
 
     @Nested
-    @TestMetadata("compiler/fir/analysis-tests/testData/resolve/classpathSubstitution")
-    @TestDataPath("$PROJECT_ROOT")
-    public class ClasspathSubstitution {
-      @Test
-      @TestMetadata("cyclicSupertypeWithAlias.kt")
-      public void testCyclicSupertypeWithAlias() {
-        runTest("compiler/fir/analysis-tests/testData/resolve/classpathSubstitution/cyclicSupertypeWithAlias.kt");
-      }
-
-      @Test
-      @TestMetadata("cyclicSupertypeWithAlias2.kt")
-      public void testCyclicSupertypeWithAlias2() {
-        runTest("compiler/fir/analysis-tests/testData/resolve/classpathSubstitution/cyclicSupertypeWithAlias2.kt");
-      }
-    }
-
-    @Nested
     @TestMetadata("compiler/fir/analysis-tests/testData/resolve/constVal")
     @TestDataPath("$PROJECT_ROOT")
     public class ConstVal {
@@ -149,6 +133,17 @@ public class FirLightTreeDiagnosticsWithoutAliasExpansionTestGenerated extends A
         @TestMetadata("unsupportedContextParameters.kt")
         public void testUnsupportedContextParameters() {
           runTest("compiler/fir/analysis-tests/testData/resolve/contextParameters/diagnostics/unsupportedContextParameters.kt");
+        }
+
+        @Nested
+        @TestMetadata("compiler/fir/analysis-tests/testData/resolve/contextParameters/diagnostics/declarationAndUsages")
+        @TestDataPath("$PROJECT_ROOT")
+        public class DeclarationAndUsages {
+          @Test
+          @TestMetadata("onClassifierDeclaration.kt")
+          public void testOnClassifierDeclaration() {
+            runTest("compiler/fir/analysis-tests/testData/resolve/contextParameters/diagnostics/declarationAndUsages/onClassifierDeclaration.kt");
+          }
         }
       }
     }
@@ -289,21 +284,45 @@ public class FirLightTreeDiagnosticsWithoutAliasExpansionTestGenerated extends A
     @TestDataPath("$PROJECT_ROOT")
     public class NestedTypeAliases {
       @Test
-      @TestMetadata("nestedTypeAliasVisibility.kt")
-      public void testNestedTypeAliasVisibility() {
-        runTest("compiler/fir/analysis-tests/testData/resolve/nestedTypeAliases/nestedTypeAliasVisibility.kt");
+      @TestMetadata("deepInnerRHS.kt")
+      public void testDeepInnerRHS() {
+        runTest("compiler/fir/analysis-tests/testData/resolve/nestedTypeAliases/deepInnerRHS.kt");
       }
 
       @Test
-      @TestMetadata("nestedTypeAliasWithInnerRHS.kt")
-      public void testNestedTypeAliasWithInnerRHS() {
-        runTest("compiler/fir/analysis-tests/testData/resolve/nestedTypeAliases/nestedTypeAliasWithInnerRHS.kt");
+      @TestMetadata("innerRHS.kt")
+      public void testInnerRHS() {
+        runTest("compiler/fir/analysis-tests/testData/resolve/nestedTypeAliases/innerRHS.kt");
+      }
+
+      @Test
+      @TestMetadata("innerRHSandTypeArguments.kt")
+      public void testInnerRHSandTypeArguments() {
+        runTest("compiler/fir/analysis-tests/testData/resolve/nestedTypeAliases/innerRHSandTypeArguments.kt");
+      }
+
+      @Test
+      @TestMetadata("kmp.kt")
+      public void testKmp() {
+        runTest("compiler/fir/analysis-tests/testData/resolve/nestedTypeAliases/kmp.kt");
+      }
+
+      @Test
+      @TestMetadata("local.kt")
+      public void testLocal() {
+        runTest("compiler/fir/analysis-tests/testData/resolve/nestedTypeAliases/local.kt");
       }
 
       @Test
       @TestMetadata("simple.kt")
       public void testSimple() {
         runTest("compiler/fir/analysis-tests/testData/resolve/nestedTypeAliases/simple.kt");
+      }
+
+      @Test
+      @TestMetadata("visibility.kt")
+      public void testVisibility() {
+        runTest("compiler/fir/analysis-tests/testData/resolve/nestedTypeAliases/visibility.kt");
       }
     }
 
@@ -504,6 +523,17 @@ public class FirLightTreeDiagnosticsWithoutAliasExpansionTestGenerated extends A
     @TestMetadata("compiler/fir/analysis-tests/testData/resolveWithStdlib/properties")
     @TestDataPath("$PROJECT_ROOT")
     public class Properties {
+    }
+  }
+
+  @Nested
+  @TestMetadata("compiler/fir/analysis-tests/testData/resolveFreezesIDE")
+  @TestDataPath("$PROJECT_ROOT")
+  public class ResolveFreezesIDE {
+    @Nested
+    @TestMetadata("compiler/fir/analysis-tests/testData/resolveFreezesIDE/pcla")
+    @TestDataPath("$PROJECT_ROOT")
+    public class Pcla {
     }
   }
 }

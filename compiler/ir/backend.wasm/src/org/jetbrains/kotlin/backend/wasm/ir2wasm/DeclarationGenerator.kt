@@ -23,7 +23,7 @@ import org.jetbrains.kotlin.ir.expressions.IrExpression
 import org.jetbrains.kotlin.ir.types.getClass
 import org.jetbrains.kotlin.ir.util.*
 import org.jetbrains.kotlin.ir.util.erasedUpperBound
-import org.jetbrains.kotlin.ir.visitors.IrElementVisitorVoid
+import org.jetbrains.kotlin.ir.visitors.IrVisitorVoid
 import org.jetbrains.kotlin.ir.visitors.acceptVoid
 import org.jetbrains.kotlin.name.parentOrNull
 import org.jetbrains.kotlin.wasm.ir.*
@@ -36,7 +36,7 @@ class DeclarationGenerator(
     private val wasmModuleMetadataCache: WasmModuleMetadataCache,
     private val allowIncompleteImplementations: Boolean,
     private val skipCommentInstructions: Boolean,
-) : IrElementVisitorVoid {
+) : IrVisitorVoid() {
 
     // Shortcuts
     private val irBuiltIns: IrBuiltIns = backendContext.irBuiltIns
@@ -513,11 +513,12 @@ fun generateDefaultInitializerForType(type: WasmType, g: WasmExpressionBuilder) 
     }
 
 fun IrFunction.getEffectiveValueParameters(): List<IrValueParameter> {
-    val implicitThis = when (this) {
-        is IrConstructor -> parentAsClass.thisReceiver!!
-        is IrSimpleFunction -> null
+    val result = mutableListOf<IrValueParameter>()
+    if (this is IrConstructor) {
+        result.add(parentAsClass.thisReceiver!!)
     }
-    return listOfNotNull(implicitThis, dispatchReceiverParameter, extensionReceiverParameter) + valueParameters
+    result.addAll(parameters)
+    return result
 }
 
 fun IrFunction.isExported(): Boolean =

@@ -27,10 +27,8 @@ import org.jetbrains.kotlin.fir.resolve.calls.getExpectedType
 import org.jetbrains.kotlin.fir.resolve.substitution.ConeSubstitutor
 import org.jetbrains.kotlin.fir.resolve.transformers.body.resolve.approximateDeclarationType
 import org.jetbrains.kotlin.fir.scopes.getDeclaredConstructors
-import org.jetbrains.kotlin.fir.scopes.impl.originalConstructorIfTypeAlias
 import org.jetbrains.kotlin.fir.scopes.impl.toConeType
-import org.jetbrains.kotlin.fir.scopes.impl.typeAliasConstructorSubstitutor
-import org.jetbrains.kotlin.fir.scopes.impl.typeAliasForConstructor
+import org.jetbrains.kotlin.fir.scopes.impl.typeAliasConstructorInfo
 import org.jetbrains.kotlin.fir.symbols.FirBasedSymbol
 import org.jetbrains.kotlin.fir.symbols.impl.*
 import org.jetbrains.kotlin.fir.symbols.lazyResolveToPhase
@@ -119,7 +117,7 @@ class CallAndReferenceGenerator(
                     getter = referencedPropertyGetterSymbol,
                     setter = referencedPropertySetterSymbol,
                     origin = origin
-                ).applyTypeArguments(callableReferenceAccess).applyReceivers(callableReferenceAccess, explicitReceiverExpression)
+                ).applyTypeArguments(callableReferenceAccess).applyReceivers(callableReferenceAccess, firSymbol, explicitReceiverExpression)
             }
 
             fun convertReferenceToSyntheticProperty(propertySymbol: FirSimpleSyntheticPropertySymbol): IrExpression? {
@@ -143,7 +141,7 @@ class CallAndReferenceGenerator(
                     getter = referencedPropertyGetterSymbol,
                     setter = referencedPropertySetterSymbol,
                     origin = origin
-                ).applyTypeArguments(callableReferenceAccess).applyReceivers(callableReferenceAccess, explicitReceiverExpression)
+                ).applyTypeArguments(callableReferenceAccess).applyReceivers(callableReferenceAccess, firSymbol, explicitReceiverExpression)
             }
 
             fun convertReferenceToLocalDelegatedProperty(propertySymbol: FirPropertySymbol): IrExpression? {
@@ -170,7 +168,7 @@ class CallAndReferenceGenerator(
                     getter = runIf(!field.isStatic) { declarationStorage.findGetterOfProperty(irPropertySymbol) },
                     setter = runIf(!field.isStatic) { declarationStorage.findSetterOfProperty(irPropertySymbol) },
                     origin
-                ).applyReceivers(callableReferenceAccess, explicitReceiverExpression)
+                ).applyReceivers(callableReferenceAccess, firSymbol, explicitReceiverExpression)
             }
 
             fun convertReferenceToFunction(functionSymbol: FirFunctionSymbol<*>): IrExpression? {
@@ -181,7 +179,7 @@ class CallAndReferenceGenerator(
                 if (function is FirConstructor) {
                     // The number of type parameters of typealias constructor may mismatch with that number in the original constructor.
                     // And for IR, we need to use the original constructor as a source of truth
-                    function = function.originalConstructorIfTypeAlias ?: function
+                    function = function?.typeAliasConstructorInfo?.originalConstructor ?: function
                 }
                 return if (adapterGenerator.needToGenerateAdaptedCallableReference(callableReferenceAccess, type, function)) {
                     // Receivers are being applied inside
@@ -198,7 +196,7 @@ class CallAndReferenceGenerator(
                         hasExtensionReceiver = function.isExtension,
                         reflectionTarget = irFunctionSymbol
                     ).applyTypeArguments(callableReferenceAccess)
-                        .applyReceivers(callableReferenceAccess, explicitReceiverExpression)
+                        .applyReceivers(callableReferenceAccess, firSymbol, explicitReceiverExpression)
                 }
             }
 
@@ -665,7 +663,7 @@ class CallAndReferenceGenerator(
                 is IrEnumEntrySymbol -> IrGetEnumValueImpl(startOffset, endOffset, irType, irSymbol)
                 else -> generateErrorCallExpression(startOffset, endOffset, calleeReference, irType)
             }
-        }.applyTypeArguments(qualifiedAccess).applyReceivers(qualifiedAccess, convertedExplicitReceiver)
+        }.applyTypeArguments(qualifiedAccess).applyReceivers(qualifiedAccess, firSymbol, convertedExplicitReceiver)
             .applyCallArguments(qualifiedAccess)
     }
 
@@ -851,7 +849,7 @@ class CallAndReferenceGenerator(
 
                 else -> generateErrorCallExpression(startOffset, endOffset, calleeReference)
             }
-        }.applyTypeArguments(lValue).applyReceivers(lValue, explicitReceiverExpression)
+        }.applyTypeArguments(lValue).applyReceivers(lValue, firSymbol, explicitReceiverExpression)
     }
 
     /** Wrap an assignment - as needed - with an implicit cast to the left-hand side type. */
@@ -939,7 +937,7 @@ class CallAndReferenceGenerator(
                     firConstructorSymbol.lazyResolveToPhase(FirResolvePhase.BODY_RESOLVE)
 
                     val fullyExpandedConstructorSymbol = firConstructorSymbol.let {
-                        it.fir.originalConstructorIfTypeAlias?.unwrapUseSiteSubstitutionOverrides()?.symbol ?: it
+                        it.fir.typeAliasConstructorInfo?.originalConstructor?.unwrapUseSiteSubstitutionOverrides()?.symbol ?: it
                     }
                     val irConstructor = declarationStorage.getIrConstructorSymbol(fullyExpandedConstructorSymbol)
 
@@ -1355,8 +1353,9 @@ class CallAndReferenceGenerator(
      * We need to map them using the typealias parameters and typealias constructor substitutors.
      */
     private fun FirCallableDeclaration?.refineTypeArgumentsOfTypeAliasConstructor(originalTypeArguments: List<FirTypeProjection>): List<FirTypeRef> {
-        val typeAliasSymbol = (this as? FirConstructor)?.typeAliasForConstructor
+        val typeAliasConstructorInfo = (this as? FirConstructor)?.typeAliasConstructorInfo
             ?: return originalTypeArguments.map { (it as FirTypeProjectionWithVariance).typeRef }
+        val typeAliasSymbol = typeAliasConstructorInfo.typeAliasSymbol
 
         val parametersSubstitutor = createParametersSubstitutor(
             session,
@@ -1367,7 +1366,7 @@ class CallAndReferenceGenerator(
 
         /**
          * Filter out type arguments that correspond outer type parameters of an inner class
-         * To perform it, we should use two substitutors: `typeAliasConstructorSubstitutor` and `parametersSubstitutor`.
+         * To perform it, we should use two substitutors: `typeAliasConstructorInfo.substitutor` and `parametersSubstitutor`.
          * Consider the following example:
          *
          * ```kt
@@ -1383,10 +1382,10 @@ class CallAndReferenceGenerator(
          * }
          * ```
          *
-         * In the example above, `parametersSubstitutor` holds `K -> String` substitution, `typeAliasConstructorSubstitutor` holds `T` -> K` substituion.
+         * In the example above, `parametersSubstitutor` holds `K -> String` substitution, `typeAliasConstructorInfo.substitutor` holds `T` -> K` substituion.
          */
-        val containingInnerClass = originalConstructorIfTypeAlias?.takeIf { it.isInner }?.getContainingClass()
-        val typeAliasConstructorSubstitutor = typeAliasConstructorSubstitutor
+        val containingInnerClass = typeAliasConstructorInfo.originalConstructor.takeIf { it.isInner }?.getContainingClass()
+        val typeAliasConstructorSubstitutor = typeAliasConstructorInfo.substitutor
         val ignoredTypeArguments = if (typeAliasConstructorSubstitutor != null && containingInnerClass != null) {
             containingInnerClass.typeParameters.filterIsInstance<FirOuterClassTypeParameterRef>().mapNotNullTo(mutableSetOf()) {
                 typeAliasConstructorSubstitutor.substituteOrNull(it.toConeType())
@@ -1468,18 +1467,29 @@ class CallAndReferenceGenerator(
 
     private fun IrExpression.applyReceivers(
         qualifiedAccess: FirQualifiedAccessExpression,
+        declarationSiteSymbol: FirCallableSymbol<*>?,
         explicitReceiverExpression: IrExpression?,
     ): IrExpression {
         when (this) {
             is IrMemberAccessExpression<*> -> {
-                val resolvedFirSymbol = qualifiedAccess.toResolvedCallableSymbol()
-                if (resolvedFirSymbol?.dispatchReceiverType != null) {
-                    val baseDispatchReceiver = qualifiedAccess.findIrDispatchReceiver(explicitReceiverExpression)
+                if (declarationSiteSymbol?.dispatchReceiverType != null) {
+                    // Although type alias constructors with inner RHS work as extension functions
+                    // (https://github.com/Kotlin/KEEP/blob/master/proposals/type-aliases.md#type-alias-constructors-for-inner-classes),
+                    // They should work as real constructors with initialized `dispatchReceiver` instead of `extensionReceiver` on IR level.
+                    val isConstructorOnTypealiasWithInnerRhs =
+                        (qualifiedAccess.calleeReference.symbol as? FirConstructorSymbol)?.let {
+                            it.origin == FirDeclarationOrigin.Synthetic.TypeAliasConstructor && it.receiverParameter != null
+                        } == true
+                    val baseDispatchReceiver = if (!isConstructorOnTypealiasWithInnerRhs) {
+                        qualifiedAccess.findIrDispatchReceiver(explicitReceiverExpression)
+                    } else {
+                        qualifiedAccess.findIrExtensionReceiver(explicitReceiverExpression)
+                    }
                     var firDispatchReceiver = qualifiedAccess.dispatchReceiver
                     if (firDispatchReceiver is FirPropertyAccessExpression && firDispatchReceiver.calleeReference is FirSuperReference) {
                         firDispatchReceiver = firDispatchReceiver.dispatchReceiver
                     }
-                    val notFromAny = !resolvedFirSymbol.isFunctionFromAny()
+                    val notFromAny = !declarationSiteSymbol.isFunctionFromAny()
                     val notAnInterface = firDispatchReceiver?.resolvedType?.toRegularClassSymbol(session)?.isInterface != true
                     dispatchReceiver =
                         if (notFromAny || notAnInterface) {
@@ -1496,8 +1506,9 @@ class CallAndReferenceGenerator(
                             )
                         }
                 }
-                // constructors don't have extension receiver but may have receiver parameter in case of inner classes
-                if (resolvedFirSymbol?.receiverParameter != null && resolvedFirSymbol !is FirConstructorSymbol) {
+                // constructors don't have extension receiver (except a case with type alias and inner RHS that is handled above),
+                // but may have receiver parameter in case of inner classes
+                if (declarationSiteSymbol?.receiverParameter != null && declarationSiteSymbol !is FirConstructorSymbol) {
                     extensionReceiver = qualifiedAccess.findIrExtensionReceiver(explicitReceiverExpression)?.let {
                         val symbol = qualifiedAccess.calleeReference.toResolvedCallableSymbol()
                             ?: error("Symbol for call ${qualifiedAccess.render()} not found")
@@ -1517,7 +1528,7 @@ class CallAndReferenceGenerator(
             }
 
             is IrFieldAccessExpression -> {
-                val firDeclaration = qualifiedAccess.toResolvedCallableSymbol()!!.fir.propertyIfBackingField
+                val firDeclaration = declarationSiteSymbol!!.fir.propertyIfBackingField
                 // Top-level properties are considered as static in IR
                 val fieldIsStatic =
                     firDeclaration.isStatic || (firDeclaration is FirProperty && !firDeclaration.isLocal && firDeclaration.containingClassLookupTag() == null)

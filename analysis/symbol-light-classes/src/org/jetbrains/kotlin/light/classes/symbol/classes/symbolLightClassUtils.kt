@@ -19,7 +19,6 @@ import org.jetbrains.kotlin.analysis.api.types.KaClassType
 import org.jetbrains.kotlin.analysis.api.types.KaType
 import org.jetbrains.kotlin.analysis.api.types.KaTypeMappingMode
 import org.jetbrains.kotlin.analysis.utils.errors.requireIsInstance
-import org.jetbrains.kotlin.analysis.utils.printer.parentOfType
 import org.jetbrains.kotlin.asJava.KotlinAsJavaSupportBase
 import org.jetbrains.kotlin.asJava.builder.LightMemberOriginForDeclaration
 import org.jetbrains.kotlin.asJava.classes.*
@@ -37,7 +36,10 @@ import org.jetbrains.kotlin.light.classes.symbol.fields.SymbolLightFieldForEnumE
 import org.jetbrains.kotlin.light.classes.symbol.fields.SymbolLightFieldForProperty
 import org.jetbrains.kotlin.light.classes.symbol.isJvmField
 import org.jetbrains.kotlin.light.classes.symbol.mapType
-import org.jetbrains.kotlin.light.classes.symbol.methods.*
+import org.jetbrains.kotlin.light.classes.symbol.methods.SymbolLightAccessorMethod
+import org.jetbrains.kotlin.light.classes.symbol.methods.SymbolLightConstructor
+import org.jetbrains.kotlin.light.classes.symbol.methods.SymbolLightNoArgConstructor
+import org.jetbrains.kotlin.light.classes.symbol.methods.SymbolLightSimpleMethod
 import org.jetbrains.kotlin.name.JvmStandardClassIds
 import org.jetbrains.kotlin.name.StandardClassIds
 import org.jetbrains.kotlin.psi.*
@@ -138,7 +140,7 @@ internal fun KaSession.createConstructors(
 
         result.add(
             SymbolLightConstructor(
-                ktAnalysisSession = this@KaSession,
+                ktAnalysisSession = this@createConstructors,
                 constructorSymbol = constructor,
                 containingClass = lightClass,
                 methodIndex = METHOD_INDEX_BASE
@@ -147,7 +149,7 @@ internal fun KaSession.createConstructors(
 
         createJvmOverloadsIfNeeded(constructor, result) { methodIndex, argumentSkipMask ->
             SymbolLightConstructor(
-                ktAnalysisSession = this@KaSession,
+                ktAnalysisSession = this@createConstructors,
                 constructorSymbol = constructor,
                 containingClass = lightClass,
                 methodIndex = methodIndex,
@@ -268,11 +270,11 @@ internal fun KaSession.createMethods(
 
     // Regular members
     regularMembers.forEach {
-        this@KaSession.handleDeclaration(it)
+        this@createMethods.handleDeclaration(it)
     }
     // Then, properties from the primary constructor parameters
     ctorProperties.forEach {
-        this@KaSession.handleDeclaration(it)
+        this@createMethods.handleDeclaration(it)
     }
 }
 
@@ -305,31 +307,6 @@ internal fun KaSession.createPropertyAccessors(
     ProgressManager.checkCanceled()
 
     if (declaration.name.isSpecial) return
-
-    val originalElement = declaration.sourcePsiSafe<KtDeclaration>()
-
-    val generatePropertyAnnotationsMethods =
-        (declaration.containingModule as? KaSourceModule)
-            ?.languageVersionSettings
-            ?.getFlag(JvmAnalysisFlags.generatePropertyAnnotationsMethods) == true
-
-    if (generatePropertyAnnotationsMethods && !lightClass.isAnnotationType && declaration.psi?.parentOfType<KtClassOrObject>() == lightClass.kotlinOrigin) {
-        val lightMemberOrigin = originalElement?.let {
-            LightMemberOriginForDeclaration(
-                originalElement = it,
-                originKind = JvmDeclarationOriginKind.OTHER,
-            )
-        }
-        val method = SymbolLightAnnotationsMethod(
-            ktAnalysisSession = this@KaSession,
-            containingPropertySymbol = declaration,
-            lightMemberOrigin = lightMemberOrigin,
-            containingClass = lightClass
-        )
-        if (method.annotations.size > 1) { // There's always a @java.lang.Deprecated
-            result.add(method)
-        }
-    }
 
     if (declaration is KaKotlinPropertySymbol && declaration.isConst) return
     if (declaration.getter?.hasBody != true && declaration.setter?.hasBody != true && declaration.visibility == KaSymbolVisibility.PRIVATE) return
@@ -397,7 +374,7 @@ internal fun KaSession.createPropertyAccessors(
                 propertyPsi.setter
         }
 
-        val lightMemberOrigin = originalElement?.let {
+        val lightMemberOrigin = declaration.sourcePsiSafe<KtDeclaration>()?.let {
             LightMemberOriginForDeclaration(
                 originalElement = it,
                 originKind = JvmDeclarationOriginKind.OTHER,
@@ -406,7 +383,7 @@ internal fun KaSession.createPropertyAccessors(
         }
 
         return SymbolLightAccessorMethod(
-            ktAnalysisSession = this@KaSession,
+            ktAnalysisSession = this@createPropertyAccessors,
             propertyAccessorSymbol = accessor,
             containingPropertySymbol = declaration,
             lightMemberOrigin = lightMemberOrigin,
@@ -454,7 +431,7 @@ internal fun KaSession.createField(
     val fieldName = nameGenerator.generateUniqueFieldName(declaration.name.asString())
 
     return SymbolLightFieldForProperty(
-        ktAnalysisSession = this@KaSession,
+        ktAnalysisSession = this@createField,
         propertySymbol = declaration,
         fieldName = fieldName,
         containingClass = lightClass,

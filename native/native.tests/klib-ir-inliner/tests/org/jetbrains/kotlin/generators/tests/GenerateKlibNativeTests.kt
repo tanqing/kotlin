@@ -105,8 +105,8 @@ fun main() {
                  * - The tests that fail are "failed" (red).
                  * - Successful tests (with really processed inline functions) are "successful" (green).
                  */
-                model("codegen/box", skipTestAllFilesCheck = true, excludeDirs = k1BoxTestDir)
-                model("codegen/boxInline", skipTestAllFilesCheck = true)
+                model("codegen/box", skipTestAllFilesCheck = true, excludeDirs = k1BoxTestDir, nativeTestInNonNativeTestInfra = true)
+                model("codegen/boxInline", skipTestAllFilesCheck = true, nativeTestInNonNativeTestInfra = true)
             }
         }
 
@@ -239,8 +239,8 @@ fun main() {
                 model("boxInline", targetBackend = TargetBackend.NATIVE, excludeDirs = k1BoxTestDir)
             }
             testClass<AbstractFirNativeSerializationTest> {
-                model("box", excludeDirs = k1BoxTestDir)
-                model("boxInline", excludeDirs = k1BoxTestDir)
+                model("box", excludeDirs = k1BoxTestDir, nativeTestInNonNativeTestInfra = true)
+                model("boxInline", excludeDirs = k1BoxTestDir, nativeTestInNonNativeTestInfra = true)
             }
         }
 

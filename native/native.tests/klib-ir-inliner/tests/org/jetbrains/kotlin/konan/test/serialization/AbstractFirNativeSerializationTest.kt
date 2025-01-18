@@ -45,7 +45,7 @@ import org.jetbrains.kotlin.test.frontend.fir.handlers.FirDumpHandler
 import org.jetbrains.kotlin.test.frontend.fir.handlers.FirResolvedTypesVerifier
 import org.jetbrains.kotlin.test.model.*
 import org.jetbrains.kotlin.test.runners.AbstractKotlinCompilerWithTargetBackendTest
-import org.jetbrains.kotlin.test.runners.codegen.commonFirHandlersForCodegenTest
+import org.jetbrains.kotlin.test.configuration.commonFirHandlersForCodegenTest
 import org.jetbrains.kotlin.test.services.LibraryProvider
 import org.jetbrains.kotlin.test.services.configuration.NativeEnvironmentConfigurator
 import org.jetbrains.kotlin.test.services.sourceProviders.AdditionalDiagnosticsSourceFilesProvider
@@ -61,14 +61,13 @@ open class AbstractFirNativeSerializationTest : AbstractKotlinCompilerWithTarget
     val frontendToIrConverter: Constructor<Frontend2BackendConverter<FirOutputArtifact, IrBackendInput>>
         get() = ::Fir2IrNativeResultsConverter
     open val irInliningFacade: Constructor<IrInliningFacade<IrBackendInput>>
-        // KT-73624: TODO In a new sub-class AbstractFirNativeSerializationWithInlinedFunInKlibTest, bind NativePreSerializationLoweringPhasesProvider instead
-        get() = ::NativeInliningFacade.bind(null)
+        get() = ::NativeInliningFacade
     val serializerFacade: Constructor<BackendFacade<IrBackendInput, BinaryArtifacts.KLib>>
         get() = ::FirNativeKlibSerializerFacade
     val deserializerFacade: Constructor<DeserializerFacade<BinaryArtifacts.KLib, IrBackendInput>>
         get() = ::NativeDeserializerFacade
 
-    override fun TestConfigurationBuilder.configuration() {
+    override fun configure(builder: TestConfigurationBuilder) = with(builder) {
         commonConfigurationForNativeBlackBoxCodegenTest(IGNORE_IR_DESERIALIZATION_TEST)
     }
 
@@ -112,11 +111,6 @@ open class AbstractFirNativeSerializationTest : AbstractKotlinCompilerWithTarget
             }
         }
     }
-
-    /**
-     * Called directly from test class constructor.
-     */
-    fun register(@TestDataFile testDataFilePath: String, sourceTransformer: ExternalSourceTransformer) {}
 }
 
 @Suppress("reformat")

@@ -112,6 +112,12 @@ public class DiagnosticsWithJsStdLibTestGenerated extends AbstractDiagnosticsTes
   }
 
   @Test
+  @TestMetadata("moreThanOneOverriddenExternals.kt")
+  public void testMoreThanOneOverriddenExternals() {
+    runTest("compiler/testData/diagnostics/testsWithJsStdLib/moreThanOneOverriddenExternals.kt");
+  }
+
+  @Test
   @TestMetadata("noImpl.kt")
   public void testNoImpl() {
     runTest("compiler/testData/diagnostics/testsWithJsStdLib/noImpl.kt");
@@ -678,6 +684,41 @@ public class DiagnosticsWithJsStdLibTestGenerated extends AbstractDiagnosticsTes
     @TestMetadata("wrongCallToNonModule.kt")
     public void testWrongCallToNonModule() {
       runTest("compiler/testData/diagnostics/testsWithJsStdLib/module/wrongCallToNonModule.kt");
+    }
+  }
+
+  @Nested
+  @TestMetadata("compiler/testData/diagnostics/testsWithJsStdLib/mpp")
+  @TestDataPath("$PROJECT_ROOT")
+  @Tag("legacy-frontend")
+  public class Mpp {
+    @Test
+    @TestMetadata("actualExternalInJs.kt")
+    public void testActualExternalInJs() {
+      runTest("compiler/testData/diagnostics/testsWithJsStdLib/mpp/actualExternalInJs.kt");
+    }
+
+    @Test
+    public void testAllFilesPresentInMpp() {
+      KtTestUtil.assertAllTestsPresentByMetadataWithExcluded(this.getClass(), new File("compiler/testData/diagnostics/testsWithJsStdLib/mpp"), Pattern.compile("^([^_](.+))\\.kt$"), Pattern.compile("^(.+)\\.fir\\.kts?$"), TargetBackend.JS_IR, true);
+    }
+
+    @Test
+    @TestMetadata("expectShouldBeJSExportable.kt")
+    public void testExpectShouldBeJSExportable() {
+      runTest("compiler/testData/diagnostics/testsWithJsStdLib/mpp/expectShouldBeJSExportable.kt");
+    }
+
+    @Test
+    @TestMetadata("expectsWithJsExport.kt")
+    public void testExpectsWithJsExport() {
+      runTest("compiler/testData/diagnostics/testsWithJsStdLib/mpp/expectsWithJsExport.kt");
+    }
+
+    @Test
+    @TestMetadata("JsExternalTypeExtendsActualExternalType.kt")
+    public void testJsExternalTypeExtendsActualExternalType() {
+      runTest("compiler/testData/diagnostics/testsWithJsStdLib/mpp/JsExternalTypeExtendsActualExternalType.kt");
     }
   }
 

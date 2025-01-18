@@ -73,6 +73,9 @@ class JsIrBackendContext(
 ) : JsCommonBackendContext {
     val phaseConfig = configuration.phaseConfig ?: PhaseConfig()
 
+    override val allowExternalInlining: Boolean
+        get() = true
+
     val polyfills = JsPolyfills()
     val globalIrInterner = IrInterningService()
 
@@ -109,7 +112,7 @@ class JsIrBackendContext(
     val packageLevelJsModules = hashSetOf<IrFile>()
     val declarationLevelJsModules = mutableListOf<IrDeclarationWithName>()
 
-    override val testFunsPerFile = hashMapOf<IrFile, IrSimpleFunction>()
+    val testFunsPerFile = hashMapOf<IrFile, IrSimpleFunction>()
 
     override val inlineClassesUtils = JsInlineClassesUtils(this)
 

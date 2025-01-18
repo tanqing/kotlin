@@ -4634,6 +4634,12 @@ public class NativeCodegenBoxTestNoPLGenerated extends AbstractNativeCodegenBoxT
         }
 
         @Test
+        @TestMetadata("kt74104.kt")
+        public void testKt74104() {
+          runTest("compiler/testData/codegen/box/callableReference/property/kt74104.kt");
+        }
+
+        @Test
         @TestMetadata("listOfStringsMapLength.kt")
         public void testListOfStringsMapLength() {
           runTest("compiler/testData/codegen/box/callableReference/property/listOfStringsMapLength.kt");
@@ -7668,6 +7674,12 @@ public class NativeCodegenBoxTestNoPLGenerated extends AbstractNativeCodegenBoxT
       }
 
       @Test
+      @TestMetadata("classMemberAndTopLevelWithContext.kt")
+      public void testClassMemberAndTopLevelWithContext() {
+        runTest("compiler/testData/codegen/box/contextParameters/classMemberAndTopLevelWithContext.kt");
+      }
+
+      @Test
       @TestMetadata("contextParameterToDefaultArgument.kt")
       public void testContextParameterToDefaultArgument() {
         runTest("compiler/testData/codegen/box/contextParameters/contextParameterToDefaultArgument.kt");
@@ -7707,6 +7719,24 @@ public class NativeCodegenBoxTestNoPLGenerated extends AbstractNativeCodegenBoxT
       @TestMetadata("sameNameWithPropertyName.kt")
       public void testSameNameWithPropertyName() {
         runTest("compiler/testData/codegen/box/contextParameters/sameNameWithPropertyName.kt");
+      }
+
+      @Test
+      @TestMetadata("withExtensionReceiverAndThis.kt")
+      public void testWithExtensionReceiverAndThis() {
+        runTest("compiler/testData/codegen/box/contextParameters/withExtensionReceiverAndThis.kt");
+      }
+
+      @Test
+      @TestMetadata("withExtensionReceiverInSupertype.kt")
+      public void testWithExtensionReceiverInSupertype() {
+        runTest("compiler/testData/codegen/box/contextParameters/withExtensionReceiverInSupertype.kt");
+      }
+
+      @Test
+      @TestMetadata("withExtensionReceiverInType.kt")
+      public void testWithExtensionReceiverInType() {
+        runTest("compiler/testData/codegen/box/contextParameters/withExtensionReceiverInType.kt");
       }
     }
 
@@ -10579,12 +10609,6 @@ public class NativeCodegenBoxTestNoPLGenerated extends AbstractNativeCodegenBoxT
         @TestMetadata("kt22694_1_3.kt")
         public void testKt22694_1_3() {
           runTest("compiler/testData/codegen/box/coroutines/controlFlow/kt22694_1_3.kt");
-        }
-
-        @Test
-        @TestMetadata("kt72464.kt")
-        public void testKt72464() {
-          runTest("compiler/testData/codegen/box/coroutines/controlFlow/kt72464.kt");
         }
 
         @Test
@@ -21186,6 +21210,24 @@ public class NativeCodegenBoxTestNoPLGenerated extends AbstractNativeCodegenBoxT
       }
 
       @Test
+      @TestMetadata("kt67024.kt")
+      public void testKt67024() {
+        runTest("compiler/testData/codegen/box/inline/kt67024.kt");
+      }
+
+      @Test
+      @TestMetadata("kt67866.kt")
+      public void testKt67866() {
+        runTest("compiler/testData/codegen/box/inline/kt67866.kt");
+      }
+
+      @Test
+      @TestMetadata("kt69041.kt")
+      public void testKt69041() {
+        runTest("compiler/testData/codegen/box/inline/kt69041.kt");
+      }
+
+      @Test
       @TestMetadata("lambdaAsAny.kt")
       public void testLambdaAsAny() {
         runTest("compiler/testData/codegen/box/inline/lambdaAsAny.kt");
@@ -29357,6 +29399,19 @@ public class NativeCodegenBoxTestNoPLGenerated extends AbstractNativeCodegenBoxT
       }
 
       @Nested
+      @TestMetadata("compiler/testData/codegen/box/javaInterop/commonAtomicTypes")
+      @TestDataPath("$PROJECT_ROOT")
+      @UseExtTestCaseGroupProvider()
+      @UsePartialLinkage(mode = Mode.DISABLED)
+      @Tag("no-partial-linkage-may-be-skipped")
+      public class CommonAtomicTypes {
+        @Test
+        public void testAllFilesPresentInCommonAtomicTypes() {
+          KtTestUtil.assertAllTestsPresentByMetadataWithExcluded(this.getClass(), new File("compiler/testData/codegen/box/javaInterop/commonAtomicTypes"), Pattern.compile("^(.+)\\.kt$"), null, TargetBackend.NATIVE, true);
+        }
+      }
+
+      @Nested
       @TestMetadata("compiler/testData/codegen/box/javaInterop/foreignAnnotationsTests")
       @TestDataPath("$PROJECT_ROOT")
       @UseExtTestCaseGroupProvider()
@@ -34086,6 +34141,30 @@ public class NativeCodegenBoxTestNoPLGenerated extends AbstractNativeCodegenBoxT
       @TestMetadata("complexPropertyInitializer.kt")
       public void testComplexPropertyInitializer() {
         runTest("compiler/testData/codegen/box/properties/complexPropertyInitializer.kt");
+      }
+
+      @Test
+      @TestMetadata("eagerInitializationGlobal1.kt")
+      public void testEagerInitializationGlobal1() {
+        runTest("compiler/testData/codegen/box/properties/eagerInitializationGlobal1.kt");
+      }
+
+      @Test
+      @TestMetadata("eagerInitializationGlobal2.kt")
+      public void testEagerInitializationGlobal2() {
+        runTest("compiler/testData/codegen/box/properties/eagerInitializationGlobal2.kt");
+      }
+
+      @Test
+      @TestMetadata("eagerInitializationGlobal3.kt")
+      public void testEagerInitializationGlobal3() {
+        runTest("compiler/testData/codegen/box/properties/eagerInitializationGlobal3.kt");
+      }
+
+      @Test
+      @TestMetadata("eagerInitializationGlobal4.kt")
+      public void testEagerInitializationGlobal4() {
+        runTest("compiler/testData/codegen/box/properties/eagerInitializationGlobal4.kt");
       }
 
       @Test
@@ -43926,6 +44005,18 @@ public class NativeCodegenBoxTestNoPLGenerated extends AbstractNativeCodegenBoxT
       }
 
       @Test
+      @TestMetadata("diamondWithCovariantOverride.kt")
+      public void testDiamondWithCovariantOverride() {
+        runTest("compiler/testData/codegen/box/super/diamondWithCovariantOverride.kt");
+      }
+
+      @Test
+      @TestMetadata("diamondWithGenericSpecialization.kt")
+      public void testDiamondWithGenericSpecialization() {
+        runTest("compiler/testData/codegen/box/super/diamondWithGenericSpecialization.kt");
+      }
+
+      @Test
       @TestMetadata("enclosedFun.kt")
       public void testEnclosedFun() {
         runTest("compiler/testData/codegen/box/super/enclosedFun.kt");
@@ -45054,6 +45145,12 @@ public class NativeCodegenBoxTestNoPLGenerated extends AbstractNativeCodegenBoxT
       }
 
       @Test
+      @TestMetadata("callTypeAliasWithInnerRhsInStaticScope.kt")
+      public void testCallTypeAliasWithInnerRhsInStaticScope() {
+        runTest("compiler/testData/codegen/box/typealias/callTypeAliasWithInnerRhsInStaticScope.kt");
+      }
+
+      @Test
       @TestMetadata("deserializedAbbreviationWithRedundantArgument.kt")
       public void testDeserializedAbbreviationWithRedundantArgument() {
         runTest("compiler/testData/codegen/box/typealias/deserializedAbbreviationWithRedundantArgument.kt");
@@ -45123,6 +45220,18 @@ public class NativeCodegenBoxTestNoPLGenerated extends AbstractNativeCodegenBoxT
       @TestMetadata("kt45308.kt")
       public void testKt45308() {
         runTest("compiler/testData/codegen/box/typealias/kt45308.kt");
+      }
+
+      @Test
+      @TestMetadata("nestedTypeAliasesAndStaticScope.kt")
+      public void testNestedTypeAliasesAndStaticScope() {
+        runTest("compiler/testData/codegen/box/typealias/nestedTypeAliasesAndStaticScope.kt");
+      }
+
+      @Test
+      @TestMetadata("nestedTypeAliasesAndTypeArguments.kt")
+      public void testNestedTypeAliasesAndTypeArguments() {
+        runTest("compiler/testData/codegen/box/typealias/nestedTypeAliasesAndTypeArguments.kt");
       }
 
       @Test
@@ -45738,9 +45847,9 @@ public class NativeCodegenBoxTestNoPLGenerated extends AbstractNativeCodegenBoxT
       }
 
       @Test
-      @TestMetadata("uLongInValueClass.kt")
-      public void testULongInValueClass() {
-        runTest("compiler/testData/codegen/box/valueClasses/uLongInValueClass.kt");
+      @TestMetadata("valueClassInValueClass.kt")
+      public void testValueClassInValueClass() {
+        runTest("compiler/testData/codegen/box/valueClasses/valueClassInValueClass.kt");
       }
 
       @Nested

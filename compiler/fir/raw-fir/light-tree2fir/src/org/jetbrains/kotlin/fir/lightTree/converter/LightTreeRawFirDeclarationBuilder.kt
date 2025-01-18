@@ -365,7 +365,16 @@ class LightTreeRawFirDeclarationBuilder(
         return annotationNode.forEachChildrenReturnList { node, container ->
             when (node.tokenType) {
                 ANNOTATION_TARGET -> annotationTarget = convertAnnotationTarget(node)
-                ANNOTATION_ENTRY -> container += convertAnnotationEntry(node, annotationTarget)
+                ANNOTATION_ENTRY -> container += convertAnnotationEntry(
+                    node,
+                    annotationTarget,
+                    runIf(annotationTarget == ALL) {
+                        ConeSimpleDiagnostic(
+                            "Multiple annotation syntax with @all use-site target is forbidden",
+                            DiagnosticKind.MultipleAnnotationWithAllTarget
+                        )
+                    }
+                )
             }
         }
     }
@@ -377,6 +386,7 @@ class LightTreeRawFirDeclarationBuilder(
         lateinit var annotationTarget: AnnotationUseSiteTarget
         annotationUseSiteTarget.forEachChildren {
             when (it.tokenType) {
+                ALL_KEYWORD -> annotationTarget = ALL
                 FIELD_KEYWORD -> annotationTarget = FIELD
                 FILE_KEYWORD -> annotationTarget = FILE
                 PROPERTY_KEYWORD -> annotationTarget = AnnotationUseSiteTarget.PROPERTY
@@ -1297,6 +1307,7 @@ class LightTreeRawFirDeclarationBuilder(
                     source = typeAlias.toFirSourceElement()
                     moduleData = baseModuleData
                     origin = FirDeclarationOrigin.Source
+                    scopeProvider = baseScopeProvider
                     name = typeAliasName
                     val isLocal = context.inLocalContext
                     status = FirDeclarationStatusImpl(
@@ -1427,7 +1438,8 @@ class LightTreeRawFirDeclarationBuilder(
                         baseModuleData,
                         classWrapper?.classBuilder?.ownerRegularOrAnonymousObjectSymbol,
                         context = context,
-                        isExtension = false
+                        isExtension = false,
+                        explicitDeclarationSource = propertySource,
                     )
                 } else {
                     this.isLocal = false
@@ -1503,6 +1515,7 @@ class LightTreeRawFirDeclarationBuilder(
                             classWrapper?.classBuilder?.ownerRegularOrAnonymousObjectSymbol,
                             context,
                             isExtension = receiverTypeNode != null,
+                            explicitDeclarationSource = propertySource,
                         )
                     }
                 }

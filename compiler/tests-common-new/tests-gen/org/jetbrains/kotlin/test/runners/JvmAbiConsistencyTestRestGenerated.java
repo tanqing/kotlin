@@ -7311,6 +7311,18 @@ public class JvmAbiConsistencyTestRestGenerated extends AbstractJvmAbiConsistenc
     }
 
     @Test
+    @TestMetadata("noLineNumberInEnumEntries.kt")
+    public void testNoLineNumberInEnumEntries() {
+      runTest("compiler/testData/codegen/bytecodeText/noLineNumberInEnumEntries.kt");
+    }
+
+    @Test
+    @TestMetadata("noLinenumberInJvmOverloads.kt")
+    public void testNoLinenumberInJvmOverloads() {
+      runTest("compiler/testData/codegen/bytecodeText/noLinenumberInJvmOverloads.kt");
+    }
+
+    @Test
     @TestMetadata("noNumberCheckCast.kt")
     public void testNoNumberCheckCast() {
       runTest("compiler/testData/codegen/bytecodeText/noNumberCheckCast.kt");
@@ -13461,6 +13473,12 @@ public class JvmAbiConsistencyTestRestGenerated extends AbstractJvmAbiConsistenc
       @Test
       public void testAllFilesPresentInAnnotations() {
         KtTestUtil.assertAllTestsPresentByMetadataWithExcluded(this.getClass(), new File("compiler/testData/codegen/bytecodeListing/annotations"), Pattern.compile("^(.+)\\.kt$"), null, TargetBackend.JVM_IR, true);
+      }
+
+      @Test
+      @TestMetadata("annotationAllTarget.kt")
+      public void testAnnotationAllTarget() {
+        runTest("compiler/testData/codegen/bytecodeListing/annotations/annotationAllTarget.kt");
       }
 
       @Test

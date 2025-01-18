@@ -355,15 +355,27 @@ public class ParcelizeFirLightTreeBoxTestGenerated extends AbstractParcelizeFirL
   }
 
   @Test
-  @TestMetadata("mppAdditionalAnnotations.kt")
-  public void testMppAdditionalAnnotations() {
-    runTest("plugins/parcelize/parcelize-compiler/testData/box/mppAdditionalAnnotations.kt");
+  @TestMetadata("mppAdditionalAnnotations_k1.kt")
+  public void testMppAdditionalAnnotations_k1() {
+    runTest("plugins/parcelize/parcelize-compiler/testData/box/mppAdditionalAnnotations_k1.kt");
   }
 
   @Test
-  @TestMetadata("mppWithExpectParcelable.kt")
-  public void testMppWithExpectParcelable() {
-    runTest("plugins/parcelize/parcelize-compiler/testData/box/mppWithExpectParcelable.kt");
+  @TestMetadata("mppAdditionalAnnotations_k2.kt")
+  public void testMppAdditionalAnnotations_k2() {
+    runTest("plugins/parcelize/parcelize-compiler/testData/box/mppAdditionalAnnotations_k2.kt");
+  }
+
+  @Test
+  @TestMetadata("mppWithExpectParcelable_k1.kt")
+  public void testMppWithExpectParcelable_k1() {
+    runTest("plugins/parcelize/parcelize-compiler/testData/box/mppWithExpectParcelable_k1.kt");
+  }
+
+  @Test
+  @TestMetadata("mppWithExpectParcelable_k2.kt")
+  public void testMppWithExpectParcelable_k2() {
+    runTest("plugins/parcelize/parcelize-compiler/testData/box/mppWithExpectParcelable_k2.kt");
   }
 
   @Test
@@ -562,6 +574,12 @@ public class ParcelizeFirLightTreeBoxTestGenerated extends AbstractParcelizeFirL
   @TestMetadata("unsignedArrays.kt")
   public void testUnsignedArrays() {
     runTest("plugins/parcelize/parcelize-compiler/testData/box/unsignedArrays.kt");
+  }
+
+  @Test
+  @TestMetadata("uuid.kt")
+  public void testUuid() {
+    runTest("plugins/parcelize/parcelize-compiler/testData/box/uuid.kt");
   }
 
   @Test
