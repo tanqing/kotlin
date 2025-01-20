@@ -29,9 +29,15 @@ plugins {
 }
 
 repositories {
-    maven("https://maven.pkg.jetbrains.space/kotlin/p/kotlin/kotlin-dependencies")
-    mavenCentral()
-    gradlePluginPortal()
+    maven(
+            url = "https://maven.aliyun.com/repository/gradle-plugin",
+            action = {
+                isAllowInsecureProtocol = true
+            }
+    )
+//    maven("https://maven.pkg.jetbrains.space/kotlin/p/kotlin/kotlin-dependencies")
+//    mavenCentral()
+//    gradlePluginPortal()
 }
 
 tasks.validatePlugins.configure {

@@ -12,13 +12,26 @@ val resolvedTestedVersion = if (isSnapshotTest) properties["defaultSnapshotVersi
 //region Download and prepare classpath for specified tested version
 
 repositories {
-    if (isSnapshotTest) {
-        mavenLocal()
-        mavenCentral()
-    }
-
-    maven(url = "https://maven.pkg.jetbrains.space/kotlin/p/kotlin/bootstrap")
-    maven(url = "https://maven.pkg.jetbrains.space/kotlin/p/kotlin/kotlin-ide-plugin-dependencies")
+    maven(
+        url = "https://maven.aliyun.com/repository/central",
+        action = {
+            isAllowInsecureProtocol = true
+        }
+    )
+    maven(
+        url = "https://maven.aliyun.com/repository/public",
+        action = {
+            isAllowInsecureProtocol = true
+        }
+    )
+//
+//    if (isSnapshotTest) {
+//        mavenLocal()
+//        mavenCentral()
+//    }
+//
+//    maven(url = "https://maven.pkg.jetbrains.space/kotlin/p/kotlin/bootstrap")
+//    maven(url = "https://maven.pkg.jetbrains.space/kotlin/p/kotlin/kotlin-ide-plugin-dependencies")
 }
 
 val classpathDestination = layout.buildDirectory.dir("classpath")

@@ -4,8 +4,11 @@ plugins {
 }
 
 repositories {
+    maven(url = "https://maven.aliyun.com/repository/central")
+    maven(url = "https://maven.aliyun.com/repository/public")
+    maven(url = "https://maven.aliyun.com/repository/gradle-plugin")
     mavenCentral()
-    gradlePluginPortal()
+//    gradlePluginPortal()
     maven("https://packages.jetbrains.team/maven/p/ij/intellij-dependencies") {
         content {
             includeGroupByRegex("org\\.jetbrains\\.intellij\\.deps(\\..+)?")

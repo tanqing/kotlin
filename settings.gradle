@@ -6,6 +6,9 @@ pluginManagement {
     apply from: 'repo/scripts/kotlin-bootstrap.settings.gradle.kts'
 
     repositories {
+        maven { url "https://maven.aliyun.com/repository/central" }
+        maven { url "https://maven.aliyun.com/repository/public" }
+        maven { url "https://maven.aliyun.com/repository/gradle-plugin" }
         maven {
             url "https://packages.jetbrains.team/maven/p/ij/intellij-dependencies"
             content {
@@ -15,7 +18,7 @@ pluginManagement {
         maven { url "https://maven.pkg.jetbrains.space/kotlin/p/kotlin/kotlin-dependencies" }
         google()
         mavenCentral()
-        gradlePluginPortal()
+//        gradlePluginPortal()
     }
 
     plugins {

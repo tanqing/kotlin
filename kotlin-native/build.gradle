@@ -36,8 +36,14 @@ buildscript {
     apply from: "gradle/kotlinGradlePlugin.gradle"
 
     repositories {
-        mavenCentral()
-        gradlePluginPortal()
+//        mavenCentral()
+//        gradlePluginPortal()
+        maven(
+                url = "https://maven.aliyun.com/repository/gradle-plugin",
+                action = {
+                    isAllowInsecureProtocol = true
+                }
+        )
     }
 
     dependencies {

@@ -5,10 +5,13 @@ pluginManagement {
     includeBuild("../gradle-settings-conventions")
 
     repositories {
+        maven(url = "https://maven.aliyun.com/repository/central")
+        maven(url = "https://maven.aliyun.com/repository/public")
+        maven(url = "https://maven.aliyun.com/repository/gradle-plugin")
         maven(url = "https://maven.pkg.jetbrains.space/kotlin/p/kotlin/kotlin-dependencies")
         mavenCentral()
         google()
-        gradlePluginPortal()
+//        gradlePluginPortal()
     }
 }
 

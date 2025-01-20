@@ -3,6 +3,9 @@ pluginManagement {
     apply(from = "../../../../../repo/scripts/kotlin-bootstrap.settings.gradle.kts")
 
     repositories {
+        maven(url = "https://maven.aliyun.com/repository/central")
+        maven(url = "https://maven.aliyun.com/repository/public")
+        maven(url = "https://maven.aliyun.com/repository/gradle-plugin")
         maven {
             url = uri("https://maven.pkg.jetbrains.space/kotlin/p/kotlin/kotlin-dependencies")
             metadataSources {
@@ -10,7 +13,7 @@ pluginManagement {
             }
         }
         mavenCentral()
-        gradlePluginPortal()
+//        gradlePluginPortal()
     }
 }
 

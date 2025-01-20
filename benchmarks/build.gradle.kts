@@ -9,6 +9,9 @@ plugins {
 val benchmarks_version = "0.4.6-1"
 
 repositories {
+    maven(url = "https://maven.aliyun.com/repository/central")
+    maven(url = "https://maven.aliyun.com/repository/public")
+    maven(url = "https://maven.aliyun.com/repository/gradle-plugin")
     maven("https://maven.pkg.jetbrains.space/kotlin/p/kotlin/kotlin-dependencies") {
         content {
             includeModuleByRegex("org\\.jetbrains\\.kotlinx", "kotlinx-benchmark-runtime.*")

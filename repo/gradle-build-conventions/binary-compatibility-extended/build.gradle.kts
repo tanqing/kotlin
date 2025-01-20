@@ -6,8 +6,11 @@ plugins {
 description = "Binary Compatibility Validator compat - track ABI changes"
 
 repositories {
+    maven(url = "https://maven.aliyun.com/repository/central")
+    maven(url = "https://maven.aliyun.com/repository/public")
+    maven(url = "https://maven.aliyun.com/repository/gradle-plugin")
     mavenCentral()
-    gradlePluginPortal()
+//    gradlePluginPortal()
 }
 
 kotlin {

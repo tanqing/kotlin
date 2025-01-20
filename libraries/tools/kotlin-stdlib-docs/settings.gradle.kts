@@ -6,7 +6,10 @@ pluginManagement {
     }
 
     repositories {
-        gradlePluginPortal()
+        maven(url = "https://maven.aliyun.com/repository/central")
+        maven(url = "https://maven.aliyun.com/repository/public")
+        maven(url = "https://maven.aliyun.com/repository/gradle-plugin")
+//        gradlePluginPortal()
         maven(url = dokkaRepository)
         if ("-local" in dokkaVersion) {
             mavenLocal()

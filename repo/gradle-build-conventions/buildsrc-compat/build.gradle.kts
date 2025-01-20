@@ -64,11 +64,14 @@ gradlePlugin {
 }
 
 repositories {
+    maven(url = "https://maven.aliyun.com/repository/central")
+    maven(url = "https://maven.aliyun.com/repository/public")
+    maven(url = "https://maven.aliyun.com/repository/gradle-plugin")
     mavenCentral()
     google()
     maven("https://packages.jetbrains.team/maven/p/ij/intellij-dependencies")
     maven("https://maven.pkg.jetbrains.space/kotlin/p/kotlin/kotlin-dependencies")
-    gradlePluginPortal()
+//    gradlePluginPortal()
 
     extra["bootstrapKotlinRepo"]?.let {
         maven(url = it)
